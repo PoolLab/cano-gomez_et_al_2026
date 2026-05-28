@@ -1,0 +1,69 @@
+###########################################################################
+#### Evaluate Spinal Cord Regional Enrichment by Transcriptomic Groups ####
+###########################################################################
+
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+
+#### Equal Sampling of the Spinal Cord Regions (Cervical, Thoracic, Lumbar, Sacral)
+
+table(scdbase$anatomy) # region ID stored in metadata slot "anatomy", scdbase is the seurat object containing either glutamatergic, GABAergic or cholinergic snRNA-seq data
+region_levels <- unique(scdbase$anatomy)
+
+sample_size <- min(table(scdbase$anatomy)) # downsampling to cell count of least deeply profiled region
+
+balanced_cells <- unlist(lapply(region_levels, function(region) {
+  region_cells <- colnames(scdbase[["RNA"]]$count)[scdbase$anatomy == region]
+  sample(region_cells, sample_size, replace = FALSE)
+}))
+
+scdbase_balanced <- subset(scdbase, cells = balanced_cells)
+table(scdbase_balanced$anatomy)
+
+##### Graph Anatomy Differences
+
+percent_df <- as.data.frame(prop.table(table(scdbase_balanced$groups, scdbase_balanced$anatomy), 1))
+
+colnames(percent_df) <- c("groups", "anatomy", "percent")
+
+percent_df$percent <- percent_df$percent * 100
+
+# Make sure clusters are character 
+percent_df$groups <- as.character(percent_df$groups)
+
+# Set new levels for plotting
+percent_df$groups <- factor(percent_df$groups, levels = <desired_order>)
+
+# Plot
+ggplot(percent_df, aes(x = groups, y = percent, fill = anatomy)) + geom_bar(stat = "identity") + scale_fill_manual(values=c("Cervical"="#FD799C", "Thoracic"="#77DD77", "Lumbar"="#00B8FC", "Sacral"="#BE9DFF")) + labs(title = "SC Regional Proportions per Group", x = "Transcriptomic Group", y = "Percent", fill = "Anatomy") + theme_minimal() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0.5))
+
+
+####################
+#### ASSIGN SEX ####
+####################
+
+
+# ADD METADATA COLUMN FOR FEMALE SCORE
+scdbase$Female_Score = scdbase[["RNA"]]$counts["Xist",]
+
+# ADD METADATA COLUMN FOR MALE SCORE
+scdbase$Male_Score = scdbase[["RNA"]]$counts["Ddx3y",] + scdbase[["RNA"]]$counts["Eif2s3y",] +   scdbase[["RNA"]]$counts["Gm29650",] + scdbase[["RNA"]]$counts["Kdm5d",] + scdbase[["RNA"]]$counts["Uty",]
+
+# ADD SEX METADATA COLUMN
+scdbase$Sex <- ifelse(scdbase$Female_Score < scdbase$Male_Score, "Male",
+                   ifelse(scdbase$Female_Score > scdbase$Male_Score, "Female", "Unassigned"))
+
+table(scdbase$Sex)
+
+# SUBSET OUT Unassigned
+
+scdbase = subset(scdbase, subset = Sex == "Unassigned", invert = T)
+scdbase
+
+
+
+######################################################################
+#### Evaluate Spinal Cord Sex Enrichment by Transcriptomic Groups ####
+######################################################################
+

@@ -39,8 +39,8 @@ percent_df$groups <- factor(percent_df$groups, levels = <desired_order>)
 ggplot(percent_df, aes(x = groups, y = percent, fill = anatomy)) + geom_bar(stat = "identity") + scale_fill_manual(values=c("Cervical"="#FD799C", "Thoracic"="#77DD77", "Lumbar"="#00B8FC", "Sacral"="#BE9DFF")) + labs(title = "SC Regional Proportions per Group", x = "Transcriptomic Group", y = "Percent", fill = "Anatomy") + theme_minimal() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0.5))
 
 
-#### DeSeq2 model for testing region specific enrichment of groups
-library(...)
+#### DESeq2 model for testing region specific enrichment of groups
+library(DESeq2)
 
 # design = ~ sex + region
 # reduced = ~ sex
@@ -50,7 +50,7 @@ library(...)
 
 
 #### Beta regression model for testing region specific enrichment of groups
-library(...)
+library(betareg)
 
 # Converted counts to proportions where each column (sample) sums to 1. That is, for each biological sample, cell type proportions sum to 1.
 # Model: y = intercept + x*AC + y*AT + z*As + w * sexM.
@@ -117,7 +117,7 @@ percent_df$groups <- factor(percent_df$groups, levels = c(<specify desired group
 ggplot(percent_df, aes(x = groups, y = percent, fill = sex)) + geom_bar(stat = "identity") + scale_fill_manual(values=c("Male"="#0095FF", "Female"="#FF6B9D")) + labs(title = "Sex proportions", x = "Group%", y = "Percent", fill = "Sex") + theme_minimal() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 0.5))
 
 
-#### DeSeq2 model for testing sex specific enrichment of groups
+#### DESeq2 model for testing sex specific enrichment of groups
 
 
 #### Beta regression model for testing sex specific enrichment of groups
